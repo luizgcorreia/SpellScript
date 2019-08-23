@@ -1,16 +1,19 @@
-fidelius 0 to Hermione
-fidelius Harry
+fidelius integer 100 to Hermione.
+fidelius decimal Harry, Ron.
+fidelius scroll "Scroll text" to Snape.
 
-legilimens(Harry)
+legilimens(Harry).
 
-expecto Hermione is (10 - 10)
+expecto Hermione is 10 * Harry
    lumos
-      fidelius 5 to Ron
+      5.5 to Ron.
    nox
 expulso
    lumos
-      fidelius 15 to Ron
-   nox
+      15*2 to Ron.
+      2+2 to Hermione.
+   nox.
 
-revelio("Rons secret is")
-revelio(Ron)
+revelio("Rons secret is").
+revelio(Ron).
+

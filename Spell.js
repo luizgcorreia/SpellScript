@@ -1,107 +1,285 @@
-// Generated automatically by nearley, version 2.15.1
+// Generated automatically by nearley, version 2.18.0
 // http://github.com/Hardmath123/nearley
 (function () {
 function id(x) { return x[0]; }
+
+const moo = require('moo');
+
+const lexer = moo.compile({
+    t_wschar: /[ \t]/,
+    t_newline: { match: /\n/, lineBreaks: true },
+    t_lparen: "(",
+    t_rparen: ")",
+    t_comma: ",",
+    t_point: ".",
+    t_sum: "+",
+    t_sub: "-",
+    t_mult: "*",
+    t_div: "/",
+    t_decimal: /[0-9]+?\.[0-9]+/,
+    t_integer: /[0-9]+/,
+    t_string: /".*"/,
+    t_id: { match: /[a-zA-Z][a-zA-Z0-9_]*/, type: moo.keywords({
+        t_begin: ["lumos"],
+        t_end: ["nox"],
+        t_read: ["legilimens"],
+        t_print: ["revelio"],
+        t_declare: ["fidelius"],
+        t_if: ["expecto"],
+        t_else: ["expulso"],
+        t_loop: ["incarcerous"],
+        t_to: ["to"],
+        t_type: ["integer","decimal","scroll"],
+        t_relational_op: ["greater than", "less than", "greater or equal", "less or equal", "not is", "is"]
+    })}
+})
+
+let reltoC = op => {
+    switch(op) {
+        case "greater than": return ">";
+        case "less than": return "<";
+        case "greater or equal": return ">=";
+        case "less or equal": return "<=";
+        case "not is": return "!=";
+        case "is": return "==";
+        default: "";
+    }
+};
+let idlist = (ids, type, arr) => ids[0].map(id => decl(id[0], type, arr) + ", ") + decl(ids[1], type, arr);
+let decl = (stm, type, arr) => {
+    if(stm.text) {
+        var_map[stm.text] = type;
+        return stm.text;
+    }
+    else {
+        var_map[stm[4]] = type;
+        return stm[4] + arr +  " = " + stm[0];
+    }
+
+};
+let atrib = (id, value, arr) => {
+    if (!var_map[id])
+        throw Error("Secret to unfidelized " + id + ". You should use the fidelius spell first");
+    
+    switch(var_map[id]){
+        case 'integer': {
+            if (Number.isInteger(value.type)){
+                if (value.type !== 0)
+                    throw Error("Incompatible types\n" + id + " expected an integer secret, but saw expression " + value.string);
+            } else {
+                if (isNaN(value))
+                    throw Error("Incompatible types\n" + id + " expected an integer secret, but saw " + value);
+                if (!Number.isInteger(Number(value)))
+                    throw Error("Incompatible types\n" + id + " expected an integer secret, but saw decimal " + value);
+            }
+            break;
+        }
+        case 'decimal': {
+            if (Number.isInteger(value.type)) {
+                if (value.type > 1)
+                    throw Error("Incompatible types\n" + id + " expected a decimal secret, but saw expression " + value.string);
+            } else {
+                if (isNaN(value))
+                    throw Error("Incompatible types\n" + id + " expected a decimal secret, but saw " + value);
+            }
+            break;
+        }
+        case 'string': {
+            if (Number.isInteger(value.type) && value.type !== 2)
+                throw Error("Incompatible types\nExpression " + value.string + " to a scroll");
+            break;
+        }
+        default: {
+
+        }
+    }
+
+    return id + arr +  " = " + value.string;
+
+};
+
+let type_format = token => {
+    let format;
+
+    if (token.type === "t_id") {
+        switch(var_map[token.text]){
+            case 'integer': {
+                format = '%d';
+                break;
+            }
+            case 'decimal': {
+                format = '%lf';
+                break;
+            }
+            case 'string': {
+                format = '%s';
+                break;
+            }
+            default: {
+
+            }
+        }
+    } else if (token.type === "t_string") {
+        format = '%s';
+    }
+
+    return format;
+}
+
+let term_check = (term) => {
+    
+    if (term.type === 't_id') {
+        if (!var_map[term])
+            throw Error("Secret to unfidelized " + term + ". You should use the fidelius spell first");
+        switch(var_map[term]){
+            case 'integer': return 0;
+            case 'decimal': return 1;
+            case 'string': return 2;
+            default: {
+            }
+        }
+    } else {
+        if (isNaN(term)) {
+            return 2;
+        } else if (!Number.isInteger(Number(term))) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+}
+
+let flat = arrays => [].concat.apply([], arrays);
+
+let var_map = {};
+
 var grammar = {
-    Lexer: undefined,
+    Lexer: lexer,
     ParserRules: [
-    {"name": "Script$ebnf$1$subexpression$1", "symbols": ["Block"]},
-    {"name": "Script$ebnf$1$subexpression$1", "symbols": ["Lines"]},
-    {"name": "Script$ebnf$1", "symbols": ["Script$ebnf$1$subexpression$1"]},
-    {"name": "Script$ebnf$1$subexpression$2", "symbols": ["Block"]},
-    {"name": "Script$ebnf$1$subexpression$2", "symbols": ["Lines"]},
-    {"name": "Script$ebnf$1", "symbols": ["Script$ebnf$1", "Script$ebnf$1$subexpression$2"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Script", "symbols": ["___", "Script$ebnf$1", "___"]},
-    {"name": "Block$string$1", "symbols": [{"literal":"l"}, {"literal":"u"}, {"literal":"m"}, {"literal":"o"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Block$string$2", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":"x"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Block", "symbols": ["___", "Block$string$1", "Lines", "Block$string$2", "___"]},
-    {"name": "Lines$ebnf$1", "symbols": []},
-    {"name": "Lines$ebnf$1$subexpression$1$ebnf$1", "symbols": [/["."]/], "postprocess": id},
-    {"name": "Lines$ebnf$1$subexpression$1$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "Lines$ebnf$1$subexpression$1", "symbols": ["___", "Spell", "Lines$ebnf$1$subexpression$1$ebnf$1", "t_newline"]},
-    {"name": "Lines$ebnf$1", "symbols": ["Lines$ebnf$1", "Lines$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Lines$ebnf$2", "symbols": [/["."]/], "postprocess": id},
-    {"name": "Lines$ebnf$2", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "Lines", "symbols": ["Lines$ebnf$1", "___", "Spell", "Lines$ebnf$2", "___"]},
-    {"name": "Spell", "symbols": ["Declare"]},
-    {"name": "Spell", "symbols": ["Read"]},
-    {"name": "Spell", "symbols": ["Print"]},
-    {"name": "Spell", "symbols": ["Conditional"]},
-    {"name": "Spell", "symbols": ["Loop"]},
-    {"name": "Read$string$1", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"g"}, {"literal":"i"}, {"literal":"l"}, {"literal":"i"}, {"literal":"m"}, {"literal":"e"}, {"literal":"n"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Read", "symbols": ["Read$string$1", "_", {"literal":"("}, "_", "Id", "_", {"literal":")"}]},
-    {"name": "Print$string$1", "symbols": [{"literal":"r"}, {"literal":"e"}, {"literal":"v"}, {"literal":"e"}, {"literal":"l"}, {"literal":"i"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Print$subexpression$1", "symbols": ["Id"]},
-    {"name": "Print$subexpression$1", "symbols": ["Text"]},
-    {"name": "Print", "symbols": ["Print$string$1", "_", {"literal":"("}, "_", "Print$subexpression$1", "_", {"literal":")"}]},
-    {"name": "Declare$string$1", "symbols": [{"literal":"f"}, {"literal":"i"}, {"literal":"d"}, {"literal":"e"}, {"literal":"l"}, {"literal":"i"}, {"literal":"u"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Declare$subexpression$1", "symbols": ["IdList"]},
-    {"name": "Declare$subexpression$1", "symbols": ["AtribututionList"]},
-    {"name": "Declare", "symbols": ["Declare$string$1", "__", "Declare$subexpression$1"]},
-    {"name": "IdList$ebnf$1", "symbols": []},
-    {"name": "IdList$ebnf$1$subexpression$1", "symbols": ["Id", "_", {"literal":","}, "_"]},
-    {"name": "IdList$ebnf$1", "symbols": ["IdList$ebnf$1", "IdList$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "IdList", "symbols": ["IdList$ebnf$1", "Id"]},
-    {"name": "AtribututionList$ebnf$1", "symbols": []},
-    {"name": "AtribututionList$ebnf$1$subexpression$1", "symbols": ["Secret", "_", {"literal":","}, "_"]},
-    {"name": "AtribututionList$ebnf$1", "symbols": ["AtribututionList$ebnf$1", "AtribututionList$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "AtribututionList", "symbols": ["AtribututionList$ebnf$1", "Secret"]},
-    {"name": "Secret$string$1", "symbols": [{"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Secret", "symbols": ["Value", "__", "Secret$string$1", "__", "Id"]},
-    {"name": "Conditional$string$1", "symbols": [{"literal":"e"}, {"literal":"x"}, {"literal":"p"}, {"literal":"e"}, {"literal":"c"}, {"literal":"t"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Conditional$ebnf$1$subexpression$1$string$1", "symbols": [{"literal":"e"}, {"literal":"x"}, {"literal":"p"}, {"literal":"u"}, {"literal":"l"}, {"literal":"s"}, {"literal":"o"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Conditional$ebnf$1$subexpression$1", "symbols": ["Conditional$ebnf$1$subexpression$1$string$1", "Block"]},
+    {"name": "Script", "symbols": ["Lines"], "postprocess":  
+        script => "#include <stdio.h>\n\nint main() {\n" + script[0] + "\treturn 0;\n}"
+        },
+    {"name": "Block", "symbols": ["___", (lexer.has("t_begin") ? {type: "t_begin"} : t_begin), "Lines", (lexer.has("t_end") ? {type: "t_end"} : t_end), "___"], "postprocess":  
+        block => "{\n" + block[2] + "}"
+        },
+    {"name": "Lines$ebnf$1$subexpression$1", "symbols": ["Spell", "_", (lexer.has("t_point") ? {type: "t_point"} : t_point), "___"]},
+    {"name": "Lines$ebnf$1", "symbols": ["Lines$ebnf$1$subexpression$1"]},
+    {"name": "Lines$ebnf$1$subexpression$2", "symbols": ["Spell", "_", (lexer.has("t_point") ? {type: "t_point"} : t_point), "___"]},
+    {"name": "Lines$ebnf$1", "symbols": ["Lines$ebnf$1", "Lines$ebnf$1$subexpression$2"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "Lines", "symbols": ["___", "Lines$ebnf$1"], "postprocess": 
+        cmd =>  cmd[1].map(spell => "\t" + spell[0] + "\n").reverse().reduce((stm, lines) => lines + stm, "") 
+         },
+    {"name": "Spell$subexpression$1", "symbols": ["Declare"]},
+    {"name": "Spell$subexpression$1", "symbols": ["Atribution"]},
+    {"name": "Spell$subexpression$1", "symbols": ["Read"]},
+    {"name": "Spell$subexpression$1", "symbols": ["Print"]},
+    {"name": "Spell$subexpression$1", "symbols": ["Conditional"]},
+    {"name": "Spell$subexpression$1", "symbols": ["Loop"]},
+    {"name": "Spell", "symbols": ["Spell$subexpression$1"], "postprocess": 
+        (cmd) => {
+            return cmd[0] + ";";
+        }
+        },
+    {"name": "Read", "symbols": [(lexer.has("t_read") ? {type: "t_read"} : t_read), "_", (lexer.has("t_lparen") ? {type: "t_lparen"} : t_lparen), "_", (lexer.has("t_id") ? {type: "t_id"} : t_id), "_", (lexer.has("t_rparen") ? {type: "t_rparen"} : t_rparen)], "postprocess": 
+        stm => "scanf(\"" + type_format(stm[4]) + "\", " + "&" + stm[4] + ")"
+        },
+    {"name": "Print$subexpression$1", "symbols": [(lexer.has("t_id") ? {type: "t_id"} : t_id)]},
+    {"name": "Print$subexpression$1", "symbols": [(lexer.has("t_string") ? {type: "t_string"} : t_string)]},
+    {"name": "Print", "symbols": [(lexer.has("t_print") ? {type: "t_print"} : t_print), "_", (lexer.has("t_lparen") ? {type: "t_lparen"} : t_lparen), "_", "Print$subexpression$1", "_", (lexer.has("t_rparen") ? {type: "t_rparen"} : t_rparen)], "postprocess": 
+        stm => "printf(\"" + type_format(stm[4][0]) + "\\n\", " + stm[4][0] + ")"
+        },
+    {"name": "Declare$subexpression$1$ebnf$1", "symbols": []},
+    {"name": "Declare$subexpression$1$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_id") ? {type: "t_id"} : t_id), "_", (lexer.has("t_comma") ? {type: "t_comma"} : t_comma), "_"]},
+    {"name": "Declare$subexpression$1$ebnf$1", "symbols": ["Declare$subexpression$1$ebnf$1", "Declare$subexpression$1$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "Declare$subexpression$1", "symbols": ["Declare$subexpression$1$ebnf$1", (lexer.has("t_id") ? {type: "t_id"} : t_id)]},
+    {"name": "Declare$subexpression$1$ebnf$2", "symbols": []},
+    {"name": "Declare$subexpression$1$ebnf$2$subexpression$1$subexpression$1", "symbols": ["Value", "__", (lexer.has("t_to") ? {type: "t_to"} : t_to), "__", (lexer.has("t_id") ? {type: "t_id"} : t_id)]},
+    {"name": "Declare$subexpression$1$ebnf$2$subexpression$1", "symbols": ["Declare$subexpression$1$ebnf$2$subexpression$1$subexpression$1", "_", (lexer.has("t_comma") ? {type: "t_comma"} : t_comma), "_"]},
+    {"name": "Declare$subexpression$1$ebnf$2", "symbols": ["Declare$subexpression$1$ebnf$2", "Declare$subexpression$1$ebnf$2$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "Declare$subexpression$1$subexpression$1", "symbols": ["Value", "__", (lexer.has("t_to") ? {type: "t_to"} : t_to), "__", (lexer.has("t_id") ? {type: "t_id"} : t_id)]},
+    {"name": "Declare$subexpression$1", "symbols": ["Declare$subexpression$1$ebnf$2", "Declare$subexpression$1$subexpression$1"]},
+    {"name": "Declare", "symbols": [(lexer.has("t_declare") ? {type: "t_declare"} : t_declare), "__", (lexer.has("t_type") ? {type: "t_type"} : t_type), "__", "Declare$subexpression$1"], "postprocess": 
+        stm => {
+            let type = stm[2];
+            switch(type.text) {
+                case "integer": return "int " + idlist(stm[4], "integer", "");
+                case "decimal": return "double " + idlist(stm[4], "decimal", "");
+                case "scroll": return "char " + idlist(stm[4], "string", "[255]");
+                default: return null;
+            }
+        }
+        },
+    {"name": "Atribution$subexpression$1", "symbols": ["Value"]},
+    {"name": "Atribution$subexpression$1", "symbols": ["Expression"]},
+    {"name": "Atribution", "symbols": ["Atribution$subexpression$1", "__", (lexer.has("t_to") ? {type: "t_to"} : t_to), "__", (lexer.has("t_id") ? {type: "t_id"} : t_id)], "postprocess": 
+        stm => atrib(stm[4],stm[0][0],"")
+        },
+    {"name": "Conditional$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_else") ? {type: "t_else"} : t_else), "Block"]},
     {"name": "Conditional$ebnf$1", "symbols": ["Conditional$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "Conditional$ebnf$1", "symbols": [], "postprocess": function(d) {return null;}},
-    {"name": "Conditional", "symbols": ["Conditional$string$1", "_", "Expression", "_", "Relational_Op", "_", "Expression", "Block", "Conditional$ebnf$1"]},
-    {"name": "Loop$string$1", "symbols": [{"literal":"i"}, {"literal":"n"}, {"literal":"c"}, {"literal":"a"}, {"literal":"r"}, {"literal":"c"}, {"literal":"e"}, {"literal":"r"}, {"literal":"o"}, {"literal":"u"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Loop", "symbols": ["Loop$string$1", "_", "Expression", "_", "Relational_Op", "_", "Expression", "Block"]},
-    {"name": "Relational_Op$string$1", "symbols": [{"literal":"g"}, {"literal":"r"}, {"literal":"e"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}, {"literal":" "}, {"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$1"]},
-    {"name": "Relational_Op$string$2", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"s"}, {"literal":"s"}, {"literal":" "}, {"literal":"t"}, {"literal":"h"}, {"literal":"a"}, {"literal":"n"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$2"]},
-    {"name": "Relational_Op$string$3", "symbols": [{"literal":"g"}, {"literal":"r"}, {"literal":"e"}, {"literal":"a"}, {"literal":"t"}, {"literal":"e"}, {"literal":"r"}, {"literal":" "}, {"literal":"o"}, {"literal":"r"}, {"literal":" "}, {"literal":"e"}, {"literal":"q"}, {"literal":"u"}, {"literal":"a"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$3"]},
-    {"name": "Relational_Op$string$4", "symbols": [{"literal":"l"}, {"literal":"e"}, {"literal":"s"}, {"literal":"s"}, {"literal":" "}, {"literal":"o"}, {"literal":"r"}, {"literal":" "}, {"literal":"e"}, {"literal":"q"}, {"literal":"u"}, {"literal":"a"}, {"literal":"l"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$4"]},
-    {"name": "Relational_Op$string$5", "symbols": [{"literal":"n"}, {"literal":"o"}, {"literal":"t"}, {"literal":" "}, {"literal":"i"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$5"]},
-    {"name": "Relational_Op$string$6", "symbols": [{"literal":"i"}, {"literal":"s"}], "postprocess": function joiner(d) {return d.join('');}},
-    {"name": "Relational_Op", "symbols": ["Relational_Op$string$6"]},
+    {"name": "Conditional", "symbols": [(lexer.has("t_if") ? {type: "t_if"} : t_if), "_", "RelationalOperation", "Block", "Conditional$ebnf$1"], "postprocess": 
+        stm => {
+            let if_stm = "if(" + stm[2] + ")" + stm[3];
+            let else_block = stm[4];
+            if (else_block) {
+                if_stm = if_stm + " else " + else_block[1];
+            }
+            return if_stm;
+        }
+        },
+    {"name": "Loop", "symbols": [(lexer.has("t_loop") ? {type: "t_loop"} : t_loop), "_", "RelationalOperation", "Block"]},
+    {"name": "RelationalOperation", "symbols": ["Expression", "_", (lexer.has("t_relational_op") ? {type: "t_relational_op"} : t_relational_op), "_", "Expression"], "postprocess": 
+        op => {
+            if (op[0].type === 2 || op[4].type === 2 )
+                throw Error("Invalid relational operation types")
+            return op[0].string + " " + reltoC(op[2].text) + " " + op[4].string;
+        }
+        },
     {"name": "Expression$ebnf$1", "symbols": []},
-    {"name": "Expression$ebnf$1$subexpression$1$subexpression$1", "symbols": [{"literal":"+"}]},
-    {"name": "Expression$ebnf$1$subexpression$1$subexpression$1", "symbols": [{"literal":"-"}]},
+    {"name": "Expression$ebnf$1$subexpression$1$subexpression$1", "symbols": [(lexer.has("t_sum") ? {type: "t_sum"} : t_sum)]},
+    {"name": "Expression$ebnf$1$subexpression$1$subexpression$1", "symbols": [(lexer.has("t_sub") ? {type: "t_sub"} : t_sub)]},
     {"name": "Expression$ebnf$1$subexpression$1", "symbols": ["_", "Expression$ebnf$1$subexpression$1$subexpression$1", "_", "Term"]},
     {"name": "Expression$ebnf$1", "symbols": ["Expression$ebnf$1", "Expression$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Expression", "symbols": ["Term", "Expression$ebnf$1"]},
+    {"name": "Expression", "symbols": ["Term", "Expression$ebnf$1"], "postprocess": 
+        exp => {
+            let first_term = exp[0], list_terms = exp[1];
+            let type = Math.max(...list_terms.reduce((list, part) => list.concat(part[3].types), first_term.types));
+            if (type === 2) {
+                throw Error("Incompatible types in expression: " + first_term.string + list_terms.map(part => part[1] + part[3].string));
+            }
+            return {type: type, string: first_term.string + list_terms.map(part => part[1] + part[3].string)};
+        }
+        },
     {"name": "Term$ebnf$1", "symbols": []},
-    {"name": "Term$ebnf$1$subexpression$1$subexpression$1", "symbols": [{"literal":"*"}]},
-    {"name": "Term$ebnf$1$subexpression$1$subexpression$1", "symbols": [{"literal":"/"}]},
-    {"name": "Term$ebnf$1$subexpression$1", "symbols": ["Term$ebnf$1$subexpression$1$subexpression$1", "Value"]},
+    {"name": "Term$ebnf$1$subexpression$1$subexpression$1", "symbols": [(lexer.has("t_mult") ? {type: "t_mult"} : t_mult)]},
+    {"name": "Term$ebnf$1$subexpression$1$subexpression$1", "symbols": [(lexer.has("t_div") ? {type: "t_div"} : t_div)]},
+    {"name": "Term$ebnf$1$subexpression$1", "symbols": ["_", "Term$ebnf$1$subexpression$1$subexpression$1", "_", "Value"]},
     {"name": "Term$ebnf$1", "symbols": ["Term$ebnf$1", "Term$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Term", "symbols": ["Value", "Term$ebnf$1"]},
-    {"name": "Value", "symbols": ["Number"]},
-    {"name": "Value", "symbols": ["Id"]},
-    {"name": "Value", "symbols": [{"literal":"("}, "_", "Expression", "_", {"literal":")"}]},
-    {"name": "Text$ebnf$1", "symbols": [/[ a-zA-Z0-9]/]},
-    {"name": "Text$ebnf$1", "symbols": ["Text$ebnf$1", /[ a-zA-Z0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Text", "symbols": [{"literal":"\""}, "Text$ebnf$1", {"literal":"\""}]},
-    {"name": "Id$ebnf$1", "symbols": [/[a-zA-Z]/]},
-    {"name": "Id$ebnf$1", "symbols": ["Id$ebnf$1", /[a-zA-Z]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Id", "symbols": ["Id$ebnf$1"]},
-    {"name": "Number$ebnf$1", "symbols": [/[0-9]/]},
-    {"name": "Number$ebnf$1", "symbols": ["Number$ebnf$1", /[0-9]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "Number", "symbols": ["Number$ebnf$1"]},
-    {"name": "t_newline", "symbols": [/[\n\r]/]},
+    {"name": "Term", "symbols": ["Value", "Term$ebnf$1"], "postprocess":  
+        term => {
+            let types = term[1].map(part => term_check(part[3])).concat(term_check(term[0]));
+            return {types: types, string: term[0] + term[1].map(part => part[1] + part[3])};
+        }
+        },
+    {"name": "Value", "symbols": [(lexer.has("t_integer") ? {type: "t_integer"} : t_integer)], "postprocess": id},
+    {"name": "Value", "symbols": [(lexer.has("t_decimal") ? {type: "t_decimal"} : t_decimal)], "postprocess": id},
+    {"name": "Value", "symbols": [(lexer.has("t_string") ? {type: "t_string"} : t_string)], "postprocess": id},
+    {"name": "Value", "symbols": [(lexer.has("t_id") ? {type: "t_id"} : t_id)], "postprocess": id},
+    {"name": "Value", "symbols": [(lexer.has("t_lparen") ? {type: "t_lparen"} : t_lparen), "_", "Expression", "_", (lexer.has("t_rparen") ? {type: "t_rparen"} : t_rparen)], "postprocess": value => "(" + value[2] + ")"},
     {"name": "_$ebnf$1", "symbols": []},
-    {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", /[\s\t]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "_", "symbols": ["_$ebnf$1"]},
-    {"name": "__$ebnf$1", "symbols": [/[\s\t]/]},
-    {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", /[\s\t]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "__", "symbols": ["__$ebnf$1"]},
+    {"name": "_$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_wschar") ? {type: "t_wschar"} : t_wschar)]},
+    {"name": "_$ebnf$1", "symbols": ["_$ebnf$1", "_$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "_", "symbols": ["_$ebnf$1"], "postprocess": d => null},
+    {"name": "__$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_wschar") ? {type: "t_wschar"} : t_wschar)]},
+    {"name": "__$ebnf$1", "symbols": ["__$ebnf$1$subexpression$1"]},
+    {"name": "__$ebnf$1$subexpression$2", "symbols": [(lexer.has("t_wschar") ? {type: "t_wschar"} : t_wschar)]},
+    {"name": "__$ebnf$1", "symbols": ["__$ebnf$1", "__$ebnf$1$subexpression$2"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "__", "symbols": ["__$ebnf$1"], "postprocess": d => null},
     {"name": "___$ebnf$1", "symbols": []},
-    {"name": "___$ebnf$1", "symbols": ["___$ebnf$1", /[\s\t\n\r]/], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
-    {"name": "___", "symbols": ["___$ebnf$1"]}
+    {"name": "___$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_newline") ? {type: "t_newline"} : t_newline)]},
+    {"name": "___$ebnf$1$subexpression$1", "symbols": [(lexer.has("t_wschar") ? {type: "t_wschar"} : t_wschar)]},
+    {"name": "___$ebnf$1", "symbols": ["___$ebnf$1", "___$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "___", "symbols": ["___$ebnf$1"], "postprocess": d => null}
 ]
   , ParserStart: "Script"
 }
