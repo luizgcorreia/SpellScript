@@ -4,7 +4,8 @@ let grammar = require("./Spell.js");
 
 let parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
-fs.readFile('test.spell', 'utf8', (err, data) => {
+let filename = process.argv[2];
+fs.readFile(filename, 'utf8', (err, data) => {
     if (err) {
       if (err.code === 'ENOENT') {
         console.error('File does not exist.');
@@ -18,8 +19,6 @@ fs.readFile('test.spell', 'utf8', (err, data) => {
   });
 
 function compile(data) {
-    //let source = data.replace(/[ \t]+/g," ");
-    //console.log(source);
     parser.feed(data);
     console.log(parser.results[0]);
 }

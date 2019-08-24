@@ -1,0 +1,5 @@
+#!/bin/bash
+nearleyc Spell.ne -o Spell.js
+node spell_compile.js $1 > prog.c
+gcc prog.c -o prog
+./prog

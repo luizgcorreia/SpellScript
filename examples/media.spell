@@ -1,0 +1,5 @@
+Revelio("Digite quantas notas inserir").
+Fidelius integer 0 to count. Fidelius decimal 0 to Total, 0 to Nota.
+Fidelius integer n. Legilimens(n).
+Incarcerous count less than n lumos legilimens(Nota). Total + Nota to Total. count+1 to count. Nox.
+Total/n to Total. Revelio("Media das notas:"). Revelio(Total).

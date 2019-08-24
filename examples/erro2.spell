@@ -1,0 +1,24 @@
+fidelius integer 100 to Hermione.
+fidelius decimal Harry, Ron.
+fidelius scroll "Digite um segredo" to Snape. 
+revelio(Snape).
+
+legilimens(Harry).
+
+expecto Hermione is 10 * Harry
+   lumos
+      5.5 to Ron.
+      incarcerous Hermione greater than 10
+      lumos
+         Hermione - 1 to Hermione.
+      nox.
+   nox
+expulso
+   lumos
+      15*2 to Ron.
+      2+2*8.8 to Hermione.
+   nox.
+
+revelio("Rons secret is").
+revelio(Ron).
+
