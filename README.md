@@ -13,3 +13,6 @@ Use spellrun to run a Spell script in the CLI:
 
 ./spellrun test.spell
 
+Projeto da Disciplina de Compiladores
+Aluno: Luiz Gabriel Correia
+RA: 21023314
